@@ -39,35 +39,30 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 	 * Constructor
 	 * 
 	 * @param path
-	 * @param list
-	 *            null if unspecified
-	 * @param property
-	 *            null if unspecified, no empty
+	 * @param list     null if unspecified
+	 * @param property null if unspecified, no empty
 	 * @throws IllegalArgumentException if list is empty
 	 */
-	public CDvQuantity(String path, Interval<Integer> occurrences, 
-			String nodeId, CAttribute parent, List<CDvQuantityItem> list,
-			CodePhrase property, DvQuantity defaultValue, 
-			DvQuantity assumedValue) {
+	public CDvQuantity(String path, Interval<Integer> occurrences, String nodeId, CAttribute parent,
+			List<CDvQuantityItem> list, CodePhrase property, DvQuantity defaultValue, DvQuantity assumedValue) {
 
-		super(list == null && property == null, path, "DV_QUANTITY",
-				occurrences, nodeId, defaultValue, assumedValue, parent);
+		super(list == null && property == null, path, "DV_QUANTITY", occurrences, nodeId, defaultValue, assumedValue,
+				parent);
 
 		if (list != null && list.isEmpty()) {
 			throw new IllegalArgumentException("empty list");
 		}
-		if(list != null) {
+		if (list != null) {
 			this.list = new ArrayList<CDvQuantityItem>(list);
 		}
 		this.property = property;
 	}
-	
+
 	public CDvQuantity copy() {
-		return new CDvQuantity(path(), getOccurrences(), getNodeId(), 
-				getParent(), list,	property, getDefaultValue(), 
+		return new CDvQuantity(path(), getOccurrences(), getNodeId(), getParent(), list, property, getDefaultValue(),
 				getAssumedValue());
 	}
-	
+
 	/**
 	 * Convenience constructor
 	 * 
@@ -75,11 +70,10 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 	 * @param occurrences
 	 * @param list
 	 */
-	public CDvQuantity(String path, Interval<Integer> occurrences,
-			List<CDvQuantityItem> list) {
+	public CDvQuantity(String path, Interval<Integer> occurrences, List<CDvQuantityItem> list) {
 		this(path, occurrences, null, null, list, null, null, null);
 	}
-	
+
 	/**
 	 * Convenience constructor
 	 * 
@@ -88,34 +82,34 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 	 * @param list
 	 * @param property
 	 */
-	public CDvQuantity(String path, Interval<Integer> occurrences,
-			List<CDvQuantityItem> list, CodePhrase property) {
+	public CDvQuantity(String path, Interval<Integer> occurrences, List<CDvQuantityItem> list, CodePhrase property) {
 		this(path, occurrences, null, null, list, property, null, null);
 	}
-	
+
 	/**
 	 * Create a required CDvQuantity with a single item
 	 * 
 	 * @param path
-	 * @param item	not null
+	 * @param item not null
 	 */
 	public static CDvQuantity singleRequired(String path, CDvQuantityItem item) {
-		if(item == null) {
+		if (item == null) {
 			throw new IllegalArgumentException("item null");
 		}
-		Interval<Integer> occurrences = new Interval<Integer>(1,1);
+		Interval<Integer> occurrences = new Interval<Integer>(1, 1);
 		List<CDvQuantityItem> list = new ArrayList<CDvQuantityItem>();
 		list.add(item);
 		return new CDvQuantity(path, occurrences, list);
 	}
-	
+
 	/**
 	 * Create a CDvQuantity that would allow any DV_QUANTITY value
+	 * 
 	 * @param path
 	 * @return
 	 */
 	public static CDvQuantity anyAllowed(String path) {
-		Interval<Integer> occurrences = new Interval<Integer>(1,1);
+		Interval<Integer> occurrences = new Interval<Integer>(1, 1);
 		return new CDvQuantity(path, occurrences, null);
 	}
 
@@ -125,53 +119,81 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 	 * @return
 	 */
 	public List<CDvQuantityItem> getList() {
-		return list == null ? null 
-				: Collections.unmodifiableList(list);
+		return list == null ? null : Collections.unmodifiableList(list);
 	}
-	
+
 	/**
 	 * Removes the given item from the list
 	 * 
 	 * @param item not null
 	 */
 	public void removeItem(CDvQuantityItem item) {
-		if(list != null && item != null) {
+		if (list != null && item != null) {
 			list.remove(item);
 		}
 	}
-	
+
+	/**
+	 * Keeps the items that have the given units
+	 * 
+	 * @param item not null
+	 * @return whether any of the units were found in the list
+	 */
+	public boolean keepItemByUnitsList(String[] unitsList) {
+		if (list == null)
+			return false;
+
+		if (unitsList == null) {
+			list.clear();
+			return false;
+		}
+
+		boolean found = false;
+		List<String> keep = Arrays.asList(unitsList);
+
+		for (Iterator<CDvQuantityItem> it = list.iterator(); it.hasNext();) {
+			CDvQuantityItem item = it.next();
+
+			if (!keep.contains(item.getUnits()))
+				it.remove();
+			else
+				found = true;
+		}
+
+		return found;
+	}
+
 	/**
 	 * Removes the items that have the given units
 	 * 
 	 * @param item not null
 	 */
 	public void removeItemByUnitsList(String[] unitsList) {
-		if(list == null || unitsList == null) {
+		if (list == null || unitsList == null) {
 			return;
 		}
-		for(Iterator<CDvQuantityItem> it =  list.iterator(); it.hasNext(); ) {
+		for (Iterator<CDvQuantityItem> it = list.iterator(); it.hasNext();) {
 			CDvQuantityItem item = it.next();
-			for(String units : unitsList) {
-				if(units.equals(item.getUnits())) {
+			for (String units : unitsList) {
+				if (units.equals(item.getUnits())) {
 					it.remove();
 					break;
 				}
 			}
 		}
-	}		
-	
+	}
+
 	/**
 	 * Adds a c_dv_quantity_item by given units
 	 * 
 	 * @param units
 	 */
 	public void addItem(CDvQuantityItem item) {
-		if(list == null) {
-			list = new ArrayList<CDvQuantityItem>();			
+		if (list == null) {
+			list = new ArrayList<CDvQuantityItem>();
 		}
 		list.add(item);
 	}
-	
 
 	/**
 	 * Optional constraint on units property
@@ -181,35 +203,30 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 	public CodePhrase getProperty() {
 		return property;
 	}
-	
+
 	/**
-     * Returns true if fields are the same
-     */
-    public boolean equals(Object o) {
-    	if (this == o) return true;
-        if (!( o instanceof CDvQuantity )) return false;
+	 * Returns true if fields are the same
+	 */
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof CDvQuantity))
+			return false;
 
-        final CDvQuantity cq = (CDvQuantity) o;
+		final CDvQuantity cq = (CDvQuantity) o;
 
-        return new EqualsBuilder()
-        		.appendSuper(super.equals(o))
-                .append(list, cq.list)
-                .append(property, cq.property)
-                .isEquals();
-    }
-    
-    /**
-     * Returns the hashcode of this object
-     * 
-     * @return hashcode
-     */
-    public int hashCode() {
-        return new HashCodeBuilder(11, 37)
-        		.appendSuper(super.hashCode())
-                .append(list)
-                .append(property)
-                .toHashCode();
-    }
+		return new EqualsBuilder().appendSuper(super.equals(o)).append(list, cq.list).append(property, cq.property)
+				.isEquals();
+	}
+
+	/**
+	 * Returns the hashcode of this object
+	 * 
+	 * @return hashcode
+	 */
+	public int hashCode() {
+		return new HashCodeBuilder(11, 37).appendSuper(super.hashCode()).append(list).append(property).toHashCode();
+	}
 
 	@Override
 	public boolean hasPath(String path) {
@@ -231,20 +248,19 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 
 	@Override
 	public boolean validValue(DvQuantity value) {
-		if(list == null) {
+		if (list == null) {
 			return true;
 		}
-		for(CDvQuantityItem item : list) {
-			if( ! item.getUnits().equals(value.getUnits())) {
+		for (CDvQuantityItem item : list) {
+			if (!item.getUnits().equals(value.getUnits())) {
 				continue;
 			}
-			if(item.getMagnitude() != null 
-					&& !item.getMagnitude().has(value.getMagnitude())) {
+			if (item.getMagnitude() != null && !item.getMagnitude().has(value.getMagnitude())) {
 				continue;
 			}
-			
+
 			// TODO precision check
-			return true;			
+			return true;
 		}
 		return false;
 	}
@@ -254,37 +270,33 @@ public class CDvQuantity extends CDomainType<DvQuantity> {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	/* fields */
 	private List<CDvQuantityItem> list;
-	private CodePhrase property;	
+	private CodePhrase property;
 }
 /*
- *  ***** BEGIN LICENSE BLOCK *****
- *  Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ * ***** BEGIN LICENSE BLOCK ***** Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- *  The contents of this file are subject to the Mozilla Public License Version
- *  1.1 (the 'License'); you may not use this file except in compliance with
- *  the License. You may obtain a copy of the License at
- *  http://www.mozilla.org/MPL/
- *
- *  Software distributed under the License is distributed on an 'AS IS' basis,
- *  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- *  for the specific language governing rights and limitations under the
- *  License.
- *
- *  The Original Code is CDvQuantity.java
- *
- *  The Initial Developer of the Original Code is Rong Chen.
- *  Portions created by the Initial Developer are Copyright (C) 2003-2006
- *  the Initial Developer. All Rights Reserved.
- *
- *  Contributor(s):
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the 'License'); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an 'AS IS' basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
  *
- *  ***** END LICENSE BLOCK *****
+ * The Original Code is CDvQuantity.java
+ *
+ * The Initial Developer of the Original Code is Rong Chen. Portions created by
+ * the Initial Developer are Copyright (C) 2003-2006 the Initial Developer. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Software distributed under the License is distributed on an 'AS IS' basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * ***** END LICENSE BLOCK *****
  */
